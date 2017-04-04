@@ -13,30 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.uestc.acamp;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+package org.uestc.acamp.rest;
+
+import org.onlab.rest.AbstractWebApplication;
+
+import java.util.Set;
 
 /**
- * Set of tests of the ONOS application component.
+ * Sample REST API web application.
  */
-public class AppComponentTest {
-
-    @Before
-    public void setUp() {
-
+public class AppWebApplication extends AbstractWebApplication {
+    @Override
+    public Set<Class<?>> getClasses() {
+        return getClasses(AppWebResource.class);
     }
-
-    @After
-    public void tearDown() {
-
-    }
-
-    @Test
-    public void basics() {
-
-    }
-
 }
