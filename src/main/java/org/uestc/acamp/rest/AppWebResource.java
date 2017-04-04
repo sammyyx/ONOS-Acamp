@@ -17,6 +17,7 @@ package org.uestc.acamp.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.onlab.packet.MacAddress;
 import org.onosproject.rest.AbstractWebResource;
 import org.uestc.acamp.device.ApDevice;
 import org.uestc.acamp.network.NetworkManager;
@@ -25,6 +26,7 @@ import org.uestc.acamp.protocol.AcampMessageConstant;
 import org.uestc.acamp.protocol.AcampMessageElement;
 import org.uestc.acamp.utils.AcampMessages;
 
+import javax.crypto.Mac;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -33,9 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
-
-import static org.onlab.util.Tools.nullIsNotFound;
 
 /**
  * Sample web resource.
@@ -61,6 +62,10 @@ public class AppWebResource extends AbstractWebResource {
         node.put("descriptor", ap.getApDescriptor());
         node.put("channel", ap.getChannel());
         node.put("ssid", ap.getSsid());
+        node.put("suppressedSsid", ap.getSuppressSsid());
+        node.put("hwmode", ap.getHwMode().getValue());
+        node.put("txpower", ap.getTxPower());
+        node.put("macfilterMode", ap.getMacFilterMode().getValue());
         return ok(node).build();
     }
 
@@ -127,6 +132,31 @@ public class AppWebResource extends AbstractWebResource {
                         sendConfigurationUpdateMessageBuilder.addMessageElement(element);
                         ap.setTxPower(txpower[0]);
                         break;
+                    case "macFilterMode":
+                        byte[] macFilterMode = ByteBuffer.allocate(1).put((byte)entry.getValue().intValue()).array();
+                        element = new AcampMessageElement.Builder()
+                                .setMessageElementType(AcampMessageConstant.MessageElementType.MAC_FILTER_MODE)
+                                .setMessageElementValue(macFilterMode).build();
+                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
+                        ap.setTxPower(macFilterMode[0]);
+                        break;
+                    case "macFilterList":
+                        LinkedList<MacAddress> macList = new LinkedList<>();
+                        JsonNode macAddressList = entry.getValue();
+                        ByteBuffer bb = ByteBuffer.allocate(6 * macAddressList.size());
+                        if (macAddressList.isArray()) {
+                            for (JsonNode macAddressNode: macAddressList) {
+                                MacAddress macAddress = MacAddress.valueOf(macAddressNode.textValue());
+                                macList.add(macAddress);
+                                bb.put(macAddress.toBytes());
+                            }
+                        }
+                        element = new AcampMessageElement.Builder()
+                                .setMessageElementType(AcampMessageConstant.MessageElementType.MAC_FILTER_LIST)
+                                .setMessageElementValue(bb.array()).build();
+                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
+                        ap.setMacFilterList(macList);
+                        break;
                     default:
                         break;
                 }
@@ -135,7 +165,7 @@ public class AppWebResource extends AbstractWebResource {
             NetworkManager.sendMessageFromPort(AcampMessages.buildAcampMessage(sendConfigurationUpdateMessage, ap), ap.getConnectPoint());
             ap.startRetransmitTimer();
             ap.setControllerSequenceNumber(ap.getControllerSequenceNumber() + 1);
-            node.put("apId", apId.intValue());
+            node.put("Complete", "configuration update");
         } catch (IOException e) {
             e.printStackTrace();
         }

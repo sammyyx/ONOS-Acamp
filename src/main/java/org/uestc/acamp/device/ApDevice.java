@@ -46,8 +46,8 @@ public class ApDevice {
     private String ssid;
     private byte channel;
     private AcampMessageConstant.HardwareMode hwMode;
-    private boolean suppressSsid;
-    private AcampMessageConstant.MacFilterMode macFilterMode;
+    private boolean suppressSsid = false;
+    private AcampMessageConstant.MacFilterMode macFilterMode = AcampMessageConstant.MacFilterMode.NO_MAC_ACCESS_CONTROL;
     private LinkedList<MacAddress> macFilterList;
     private byte txPower;
     private String wpaPassword;
@@ -246,7 +246,7 @@ public class ApDevice {
         this.hwMode = hwMode;
     }
 
-    public boolean isSuppressSsid() {
+    public boolean getSuppressSsid() {
         return suppressSsid;
     }
 
