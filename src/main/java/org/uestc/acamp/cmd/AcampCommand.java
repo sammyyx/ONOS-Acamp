@@ -15,19 +15,28 @@
  */
 package org.uestc.acamp.cmd;
 
+import org.apache.karaf.shell.commands.Argument;
 import org.apache.karaf.shell.commands.Command;
 import org.onosproject.cli.AbstractShellCommand;
+import org.uestc.acamp.utils.ApDevices;
 
 /**
  * Sample Apache Karaf CLI command
  */
-@Command(scope = "onos", name = "sample",
+@Command(scope = "onos", name = "acamp",
          description = "Sample Apache Karaf CLI command")
-public class AppCommand extends AbstractShellCommand {
+public class AcampCommand extends AbstractShellCommand {
+
+    @Argument(index = 0, name = "commandType", description = "Whether command is getting or setting",
+            required = true, multiValued = false)
+    String type = null;
 
     @Override
     protected void execute() {
-        print("Hello %s", "World");
+        switch (type) {
+            case "info":
+                print("connected ap:%s", ApDevices.connectedApJsonObject());
+                break;
+        }
     }
-
 }

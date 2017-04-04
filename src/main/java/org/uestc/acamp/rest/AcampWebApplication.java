@@ -23,9 +23,9 @@ import java.util.Set;
 /**
  * Sample REST API web application.
  */
-public class AppWebApplication extends AbstractWebApplication {
+public class AcampWebApplication extends AbstractWebApplication {
     @Override
     public Set<Class<?>> getClasses() {
-        return getClasses(AppWebResource.class);
+        return getClasses(AcampWebResource.class);
     }
 }

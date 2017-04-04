@@ -42,7 +42,7 @@ import java.util.Map;
  * Sample web resource.
  */
 @Path("config")
-public class AppWebResource extends AbstractWebResource {
+public class AcampWebResource extends AbstractWebResource {
 
     /**
      * Get hello world greeting.
