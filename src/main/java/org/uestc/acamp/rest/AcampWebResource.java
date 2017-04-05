@@ -39,13 +39,13 @@ import java.util.LinkedList;
 import java.util.Map;
 
 /**
- * Sample web resource.
+ * Acamp web resource.
  */
 @Path("config")
 public class AcampWebResource extends AbstractWebResource {
 
     /**
-     * Get hello world greeting.
+     * Get current connected aps' configuration
      *
      * @return 200 OK
      */
@@ -69,106 +69,42 @@ public class AcampWebResource extends AbstractWebResource {
         return ok(node).build();
     }
 
+    /**
+     * Set Ap configuration according to apId
+     *
+     * @return 200 OK
+     */
     @POST
     @Path("set")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response configurationDelivery(InputStream inputStream) {
         ObjectNode node = mapper().createObjectNode();
+        ObjectNode jsonTree = null;
         if (inputStream == null) {
             return ok(node.put("empty", "configuration")).build();
         }
         try {
-            ObjectNode jsonTree = (ObjectNode) mapper().readTree(inputStream);
-            JsonNode apId = jsonTree.get("apId");
-            if (apId == null) {
-                return ok(node.put("error", "configuration")).build();
-            }
-            ApDevice ap = NetworkManager.apDeviceList.get(apId.intValue());
-            if (ap == null) {
-                return ok(node.put("ap", "not found")).build();
-            }
-            AcampMessageElement element = null;
-            AcampMessage.Builder sendConfigurationUpdateMessageBuilder = new AcampMessage.Builder()
-                    .setMessageType(AcampMessageConstant.MessageType.CONFIGURATION_UPDATE_REQUEST)
-                    .setApId(apId.intValue())
-                    .setProtocolType(AcampMessageConstant.ProtocolType.CONTROL_MESSAGE)
-                    .setProtocolVersion(AcampMessageConstant.ProtocolVersion.CURRENT_VER)
-                    .setSequenceNumber(ap.getControllerSequenceNumber());
-
-            Iterator<Map.Entry<String,JsonNode>> it = jsonTree.fields();
-            while (it.hasNext()) {
-                Map.Entry<String, JsonNode> entry = it.next();
-                switch (entry.getKey()) {
-                    case "ssid":
-                        String ssid = entry.getValue().textValue();
-                        element = new AcampMessageElement.Builder()
-                                .setMessageElementType(AcampMessageConstant.MessageElementType.SSID)
-                                .setMessageElementValue(ssid.getBytes()).build();
-                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
-                        ap.setSsid(ssid);
-                        break;
-                    case "channel":
-                        byte[] channel = ByteBuffer.allocate(1).put((byte)entry.getValue().intValue()).array();
-                        element = new AcampMessageElement.Builder()
-                                .setMessageElementType(AcampMessageConstant.MessageElementType.CHANNEL)
-                                .setMessageElementValue(channel).build();
-                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
-                        ap.setChannel(channel[0]);
-                        break;
-                    case "hwmode":
-                        byte[] hwmode = ByteBuffer.allocate(1).put((byte)entry.getValue().intValue()).array();
-                        element = new AcampMessageElement.Builder()
-                                .setMessageElementType(AcampMessageConstant.MessageElementType.HARDWARE_MODE)
-                                .setMessageElementValue(hwmode).build();
-                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
-                        ap.setHwMode(AcampMessageConstant.HardwareMode.getEnumHardwareMode(hwmode[0]));
-                        break;
-                    case "txpower":
-                        byte[] txpower = ByteBuffer.allocate(1).put((byte)entry.getValue().intValue()).array();
-                        element = new AcampMessageElement.Builder()
-                                .setMessageElementType(AcampMessageConstant.MessageElementType.TX_POWER)
-                                .setMessageElementValue(txpower).build();
-                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
-                        ap.setTxPower(txpower[0]);
-                        break;
-                    case "macFilterMode":
-                        byte[] macFilterMode = ByteBuffer.allocate(1).put((byte)entry.getValue().intValue()).array();
-                        element = new AcampMessageElement.Builder()
-                                .setMessageElementType(AcampMessageConstant.MessageElementType.MAC_FILTER_MODE)
-                                .setMessageElementValue(macFilterMode).build();
-                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
-                        ap.setTxPower(macFilterMode[0]);
-                        break;
-                    case "macFilterList":
-                        LinkedList<MacAddress> macList = new LinkedList<>();
-                        JsonNode macAddressList = entry.getValue();
-                        ByteBuffer bb = ByteBuffer.allocate(6 * macAddressList.size());
-                        if (macAddressList.isArray()) {
-                            for (JsonNode macAddressNode: macAddressList) {
-                                MacAddress macAddress = MacAddress.valueOf(macAddressNode.textValue());
-                                macList.add(macAddress);
-                                bb.put(macAddress.toBytes());
-                            }
-                        }
-                        element = new AcampMessageElement.Builder()
-                                .setMessageElementType(AcampMessageConstant.MessageElementType.MAC_FILTER_LIST)
-                                .setMessageElementValue(bb.array()).build();
-                        sendConfigurationUpdateMessageBuilder.addMessageElement(element);
-                        ap.setMacFilterList(macList);
-                        break;
-                    default:
-                        break;
-                }
-            }
-            AcampMessage sendConfigurationUpdateMessage = sendConfigurationUpdateMessageBuilder.build();
-            NetworkManager.sendMessageFromPort(AcampMessages.buildAcampMessage(sendConfigurationUpdateMessage, ap), ap.getConnectPoint());
-            ap.startRetransmitTimer();
-            ap.setControllerSequenceNumber(ap.getControllerSequenceNumber() + 1);
-            node.put("Complete", "configuration update");
+            jsonTree = (ObjectNode) mapper().readTree(inputStream);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        JsonNode apId = jsonTree.get("apId");
+        if (apId == null) {
+            return ok(node.put("error", "configuration")).build();
+        }
+        ApDevice ap = NetworkManager.apDeviceList.get(apId.intValue());
+        if (ap == null) {
+            return ok(node.put("ap", "not found")).build();
+        }
+        AcampMessage sendConfigurationUpdateMessage = AcampMessages.buildConfigurationUpdateMessage(jsonTree);
+        byte[] retransmitMessage = AcampMessages.buildAcampMessage(sendConfigurationUpdateMessage, ap);
+        ap.setRetransmitMessage(retransmitMessage);
+        NetworkManager.sendMessageFromPort(retransmitMessage, ap.getConnectPoint());
+        ap.startRetransmitTimer();
+        ap.setControllerSequenceNumber(ap.getControllerSequenceNumber() + 1);
+
+        node.put("Complete", "configuration update");
         return ok(node).build();
     }
 

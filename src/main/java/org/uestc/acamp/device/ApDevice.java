@@ -120,29 +120,6 @@ public class ApDevice {
         this.controllerSequenceNumber = controllerSequenceNumber;
     }
 
-    public void startWaitKeepAliveTimer() {
-        waitKeepAliveTimer = new Timer();
-        WaitKeepAliveTimerTask timerTask = new WaitKeepAliveTimerTask();
-        waitKeepAliveTimer.schedule(timerTask, AcampMessageConstant.getWaitKeepAliveMaxTime() * 1000);
-    }
-
-    public void startRetransmitTimer() {
-        retransmitTimer = new Timer();
-        RetransmitTimerTask timerTask = new RetransmitTimerTask();
-        retransmitTimer.schedule(timerTask, 3000, retransmitInterval * 1000);
-    }
-
-    public void updateWaitKeepAliveTimer() {
-        waitKeepAliveTimer.cancel();
-        startWaitKeepAliveTimer();
-    }
-
-    public void resetRetransmitCounters() {
-        this.retransmitTimer.cancel();
-        this.retransmitCount = 0;
-        this.retransmitInterval = 3;
-    }
-
     public String getApName() {
         return apName;
     }
@@ -326,12 +303,35 @@ public class ApDevice {
         return retransmitTimer;
     }
 
+    public void startWaitKeepAliveTimer() {
+        waitKeepAliveTimer = new Timer();
+        WaitKeepAliveTimerTask timerTask = new WaitKeepAliveTimerTask();
+        waitKeepAliveTimer.schedule(timerTask, AcampMessageConstant.getWaitKeepAliveMaxTime() * 1000);
+    }
+
+    public void startRetransmitTimer() {
+        retransmitTimer = new Timer();
+        RetransmitTimerTask timerTask = new RetransmitTimerTask();
+        retransmitTimer.schedule(timerTask, retransmitInterval * 1000);
+    }
+
+    public void updateWaitKeepAliveTimer() {
+        waitKeepAliveTimer.cancel();
+        startWaitKeepAliveTimer();
+    }
+
+    public void resetRetransmitCounters() {
+        this.retransmitTimer.cancel();
+        this.retransmitCount = 0;
+        this.retransmitInterval = 3;
+    }
+
     public class WaitKeepAliveTimerTask extends TimerTask {
 
         @Override
         public void run() {
             NetworkManager.apDeviceList.remove(apId);
-            log.info("delete ap");
+            log.info("keep alive time out: delete ap");
         }
     }
 
@@ -339,16 +339,17 @@ public class ApDevice {
 
         @Override
         public void run() {
-            if (retransmitCount > AcampMessageConstant.getRetransmitMaxCount()) {
+            if (retransmitCount >= AcampMessageConstant.getRetransmitMaxCount()) {
                 NetworkManager.apDeviceList.remove(apId);
                 retransmitTimer.cancel();
-                log.info("over max retransmit count:delete ap");
+                log.info("over max retransmit count: delete ap");
                 return;
             }
             NetworkManager.sendMessageFromPort(retransmitMessage, connectPoint);
             log.info("retransmit packet");
             retransmitInterval = retransmitInterval * 2;
             retransmitCount++;
+            startRetransmitTimer();
         }
     }
 }

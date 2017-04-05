@@ -26,7 +26,7 @@ public class ApRunState implements ApFiniteStateMachine {
 
     @Override
     public void getConfigurationResponse(ApDevice ap, AcampMessage acampMessage) {
-        log.info("getConfiguration response in run state");
+        log.info("get configuration response in run state");
         for (AcampMessageElement me: acampMessage.getMessageElements()) {
             ap.updateApDevice(me);
         }
