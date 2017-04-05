@@ -4,8 +4,6 @@
 
 Ap Control and Manage Protocol(ACAMP), a protocol used to configure and manage access point(AP) under SDN architecture. This is the source code of controller apps building on ONOS, SDN controller.
 
-![http://wx4.sinaimg.cn/mw690/a8171f87ly1febrfi3q3tj20s50483za.jpg]()
-
 ## Architecture
 
 This apps is composed of seven components, including cmd, device, network, process, protocol, rest and utils. 
