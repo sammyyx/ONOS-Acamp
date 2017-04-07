@@ -68,7 +68,6 @@ public class AcampCommand extends AbstractShellCommand {
                     print("Error:%s", "Ap Not Found!");
                     return;
                 }
-                print("reading config");
                 AcampMessage sendConfigurationUpdate = AcampMessages.buildConfigurationUpdateMessage(jsonTree);
                 byte[] retransmitMessage = AcampMessages.buildAcampMessage(sendConfigurationUpdate, ap);
                 ap.setRetransmitMessage(retransmitMessage);
@@ -76,6 +75,18 @@ public class AcampCommand extends AbstractShellCommand {
                 ap.startRetransmitTimer();
                 ap.setControllerSequenceNumber(ap.getControllerSequenceNumber() + 1);
                 break;
+            case "update":
+                for (ApDevice each: NetworkManager.apDeviceList.values()) {
+                    AcampMessage sendConfigurationRequest = AcampMessages.buildConfigurationRequest(each);
+                    byte[] eachRetransmitMessage = AcampMessages.buildAcampMessage(sendConfigurationRequest, each);
+                    each.setRetransmitMessage(eachRetransmitMessage);
+                    NetworkManager.sendMessageFromPort(eachRetransmitMessage, each.getConnectPoint());
+                    each.startRetransmitTimer();
+                    each.setControllerSequenceNumber(each.getControllerSequenceNumber() + 1);
+                }
+                break;
+            default:
+                print("command error");
         }
     }
 }

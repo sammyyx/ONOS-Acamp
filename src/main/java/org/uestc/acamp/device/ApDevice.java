@@ -347,7 +347,12 @@ public class ApDevice {
             }
             NetworkManager.sendMessageFromPort(retransmitMessage, connectPoint);
             log.info("retransmit packet");
-            retransmitInterval = retransmitInterval * 2;
+            if (retransmitCount < 2) {
+                retransmitInterval = retransmitInterval * 2;
+            }
+            else {
+                retransmitInterval = 15;
+            }
             retransmitCount++;
             startRetransmitTimer();
         }

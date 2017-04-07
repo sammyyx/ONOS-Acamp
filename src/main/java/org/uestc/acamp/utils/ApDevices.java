@@ -30,11 +30,19 @@ public class ApDevices {
         ArrayNode array = JsonNodeFactory.instance.arrayNode();
         for (ApDevice ap:NetworkManager.apDeviceList.values()) {
             ObjectNode node = JsonNodeFactory.instance.objectNode();
-            node.put("id", ap.getApId());
             node.put("name", ap.getApName());
-            node.put("ssid", ap.getSsid());
+            node.put("id", ap.getApId());
+            node.put("descriptor", ap.getApDescriptor());
             node.put("channel", ap.getChannel());
+            node.put("ssid", ap.getSsid());
+            node.put("suppressedSsid", ap.getSuppressSsid());
             node.put("hwmode", ap.getHwMode().getValue());
+            node.put("txpower", ap.getTxPower());
+            node.put("macFilterMode", ap.getMacFilterMode().getValue());
+            ArrayNode maclist = node.putArray("macFilterList");
+            for (MacAddress macAddress: ap.getMacFilterList()) {
+                maclist.add(macAddress.toString());
+            }
             array.add(node);
         }
         return array;

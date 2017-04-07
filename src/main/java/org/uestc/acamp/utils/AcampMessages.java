@@ -130,7 +130,7 @@ public class AcampMessages {
                         }
                     }
                     element = new AcampMessageElement.Builder()
-                            .setMessageElementType(AcampMessageConstant.MessageElementType.MAC_FILTER_LIST)
+                            .setMessageElementType(AcampMessageConstant.MessageElementType.RESET_MAC_FILTER_LIST)
                             .setMessageElementValue(bb.array()).build();
                     sendConfigurationUpdateMessageBuilder.addMessageElement(element);
                     ap.setMacFilterList(macList);
@@ -141,6 +141,30 @@ public class AcampMessages {
         }
         AcampMessage configurationUpdateMessage = sendConfigurationUpdateMessageBuilder.build();
         return configurationUpdateMessage;
+    }
+
+    public static AcampMessage buildConfigurationRequest(ApDevice ap) {
+
+        // Send Configuration Request
+        AcampMessageElement desiredConfigurationMsgEle = new AcampMessageElement.Builder()
+                .setMessageElementType(AcampMessageConstant.MessageElementType.DESIRED_CONFIGURATION_LIST)
+                .setMessageElementValue(AcampMessages.convertDesiredConfigurationList2Bytes(
+                        AcampMessageConstant.MessageElementType.SSID, AcampMessageConstant.MessageElementType.CHANNEL, AcampMessageConstant.MessageElementType.HARDWARE_MODE,
+                        AcampMessageConstant.MessageElementType.SUPPRESS_SSID, AcampMessageConstant.MessageElementType.SECURITY_OPTION, AcampMessageConstant.MessageElementType.MAC_FILTER_MODE,
+                        AcampMessageConstant.MessageElementType.MAC_FILTER_LIST, AcampMessageConstant.MessageElementType.TX_POWER, AcampMessageConstant.MessageElementType.WPA_PASSWORD
+                ))
+                .build();
+
+        AcampMessage sendConfigurationRequest = new AcampMessage.Builder()
+                .setMessageType(AcampMessageConstant.MessageType.CONFIGURATION_REQUEST)
+                .setApId(ap.getApId())
+                .setProtocolVersion(AcampMessageConstant.ProtocolVersion.CURRENT_VER)
+                .setProtocolType(AcampMessageConstant.ProtocolType.CONTROL_MESSAGE)
+                .setSequenceNumber(ap.getControllerSequenceNumber())
+                .addMessageElement(desiredConfigurationMsgEle)
+                .build();
+
+        return sendConfigurationRequest;
     }
 
     public static byte[] getIpAddressBytes(Ip4Address ipAddress) {
