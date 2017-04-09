@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.onlab.packet.IPv4.PROTOCOL_UDP;
 
@@ -54,7 +55,7 @@ public class NetworkManager {
         ControllerDevice.packetService = packetService;
 
         // For MultiAps supports
-        apDeviceList = Collections.synchronizedMap(new HashMap<Integer, ApDevice>());
+        apDeviceList = new ConcurrentHashMap<>();
 
         appId = coreService.registerApplication("org.uestc.acamp");
         processor = new AcampPacketProcessor();
