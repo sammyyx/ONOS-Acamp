@@ -16,8 +16,9 @@ import java.util.Enumeration;
 public class ControllerDevice {
     private static MacAddress hardwareAddress;
     private static Ip4Address ip4Address;
-    public static final String name = "わたしController";
-    public static final String descriptor = "自己紹介は難しい";
+    public static final String name = "AcampController";
+    public static final String descriptor = "control and manage ap";
+    public static final String ifname = "eth0";
 
     public static PacketService packetService;
 
@@ -26,7 +27,7 @@ public class ControllerDevice {
             Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();
             while (netInterfaces.hasMoreElements()) {
                 NetworkInterface netInterface = netInterfaces.nextElement();
-                if (netInterface.getName().equals("eth0")) {
+                if (netInterface.getName().equals(ifname)) {
                     hardwareAddress = MacAddress.valueOf(netInterface.getHardwareAddress());
                     Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
                     while (addresses.hasMoreElements())

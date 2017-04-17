@@ -116,7 +116,7 @@ public class AcampMessages {
                             .setMessageElementType(AcampMessageConstant.MessageElementType.MAC_FILTER_MODE)
                             .setMessageElementValue(macFilterMode).build();
                     sendConfigurationUpdateMessageBuilder.addMessageElement(element);
-                    ap.setTxPower(macFilterMode[0]);
+                    ap.setMacFilterMode(AcampMessageConstant.MacFilterMode.getEnumMacFilterMode(macFilterMode[0]));
                     break;
                 case "macFilterList":
                     LinkedList<MacAddress> macList = new LinkedList<>();
